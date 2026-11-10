@@ -1,0 +1,28 @@
+#!/usr/bin/env sh
+#Copyright (C) 2026 by Theron Kauk and John Morris Beck <hdconfigure.direct@gmail.com> THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+copy_folder() {
+    # Check that both source and destination arguments are provided
+    if [ "$#" -lt 2 ]; then
+        echo "Error: Missing arguments. Usage: copy_folder <source_dir> <target_dir>" >&2
+        return 1
+    fi
+
+    # Strip any trailing slash from source path to ensure uniform POSIX behavior
+    src="${1%/}"
+    src="${src:-/}"
+    dest="$2"
+
+    # Verify the source exists and is a directory
+    if [ ! -d "$src" ]; then
+        echo "Error: Source '$1' does not exist or is not a directory." >&2
+        return 1
+    fi
+
+    # Ensure the target directory exists (creates parent directories if needed)
+    mkdir -p "$dest" || return 1
+
+    # Recursive copy into the target directory
+    cp -R "$src" "$dest/"
+}
+copy_folder "$@"
