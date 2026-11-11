@@ -172,7 +172,14 @@ app.get('/', (c) => {
 export default app;
 EOF
 
-# 9. Web Frontend Package Configuration (Vite)
+# 9. API Deployment Configuration (wrangler.toml)
+cat << 'EOF' > "$TARGET_DIR/apps/api/wrangler.toml"
+name = "app-api"
+main = "src/index.ts"
+compatibility_date = "2026-01-01"
+EOF
+
+# 10. Web Frontend Package Configuration (Vite)
 cat << 'EOF' > "$TARGET_DIR/apps/web/package.json"
 {
   "name": "@app/web",
@@ -197,6 +204,87 @@ cat << 'EOF' > "$TARGET_DIR/apps/web/package.json"
     "_comment_vite": "Next-generation frontend build tool and dev server"
   }
 }
+EOF
+
+# 11. Web Frontend TypeScript Configuration
+cat << 'EOF' > "$TARGET_DIR/apps/web/tsconfig.json"
+{
+  "extends": "../../tsconfig.json",
+  "_comment_extends": "Inherits base compiler options from the root monorepo configuration",
+  "compilerOptions": {
+    "target": "ESNext",
+    "_comment_target": "Sets JavaScript target version for modern browsers",
+    "module": "ESNext",
+    "_comment_module": "Specifies module loading for Vite bundler",
+    "moduleResolution": "bundler",
+    "_comment_moduleResolution": "Optimizes module resolution for bundlers",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "_comment_lib": "Includes browser and modern JavaScript runtime APIs",
+    "jsx": "react-jsx",
+    "_comment_jsx": "Enables modern JSX support if building with React or similar UI layers",
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"]
+}
+EOF
+
+# 12. Vite Configuration for Frontend
+cat << 'EOF' > "$TARGET_DIR/apps/web/vite.config.ts"
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  server: {
+    port: 3000,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8787',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
+  }
+});
+EOF
+
+# 13. Frontend HTML Entry Point
+cat << 'EOF' > "$TARGET_DIR/apps/web/index.html"
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fresh Onion App</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+EOF
+
+# 14. Frontend Main TypeScript Entry Point
+cat << 'EOF' > "$TARGET_DIR/apps/web/src/main.ts"
+import { getHelloWorldDomainData } from '@app/domain';
+
+const appElement = document.getElementById('app');
+
+if (appElement) {
+  const data = getHelloWorldDomainData('Frontend User');
+  appElement.innerHTML = `
+    <div style="font-family: system-ui, sans-serif; padding: 2rem; max-width: 600px; margin: auto;">
+      <h1>${data.message}</h1>
+      <p><small>Timestamp: ${data.timestamp}</small></p>
+    </div>
+  `;
+}
+EOF
+
+# 15. Root .gitignore
+cat << 'EOF' > "$TARGET_DIR/.gitignore"
+node_modules/
+dist/
+.wrangler/
+.DS_Store
 EOF
 
 # Initialize git repository only after all template files are successfully written
