@@ -4,3 +4,24 @@
 mkdir -p "$1" "$1/apps/web" "$1/apps/api" "$1/packages/domain"
 
 git init "$1"
+
+mkdir -p "$1/packages/domain"
+cat << 'EOF' > "$1/packages/domain/package.json"
+{
+  "name": "@app/domain",
+  "_comment_name": "Monorepo package name (scoped import target for apps/api and apps/web)",
+  "version": "0.0.1",
+  "private": true,
+  "_comment_private": "Prevents accidental publication to the public npm registry",
+  "main": "dist/index.js",
+  "_comment_main": "Compiled JavaScript entry point produced by tsc",
+  "types": "dist/index.d.ts",
+  "_comment_types": "TypeScript declaration entry point for workspace auto-complete",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
+EOF
