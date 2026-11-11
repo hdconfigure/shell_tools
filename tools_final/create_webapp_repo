@@ -10,6 +10,13 @@ fi
 
 TARGET_DIR="$1"
 
+# Check if the app has already been initialized in this directory
+if [ -f "$TARGET_DIR/.app_initialized" ]; then
+  echo "WARNING: This directory ($TARGET_DIR) has already been initialized by this script!"
+  echo "Aborting to prevent overwriting existing progress and file changes."
+  exit 1
+fi
+
 # Create all necessary monorepo directory structures dynamically
 mkdir -p "$TARGET_DIR" \
          "$TARGET_DIR/apps/web/src" \
@@ -279,13 +286,16 @@ if (appElement) {
 }
 EOF
 
-# 15. Root .gitignore
+# 15. Root .gitignore (including tracking marker file if desired, or leaving it tracked)
 cat << 'EOF' > "$TARGET_DIR/.gitignore"
 node_modules/
 dist/
 .wrangler/
 .DS_Store
 EOF
+
+# Create the hidden initialization marker file
+echo "Initialized on $(date)" > "$TARGET_DIR/.app_initialized"
 
 # Initialize git repository only after all template files are successfully written
 git init "$TARGET_DIR"
