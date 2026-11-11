@@ -5,7 +5,7 @@
 TARGET_DIR="${1:-.}"
 
 if [ ! -d "$TARGET_DIR" ]; then
-  echo "Error: Target directory '$TARGET_DIR' does not exist."
+  echo "Error: Target directory '$TARGET_DIR' does not exist." >&2
   exit 1
 fi
 
@@ -14,9 +14,15 @@ if ! command -v npm >/dev/null 2>&1 || ! command -v node >/dev/null 2>&1; then
   echo "Node.js and/or npm not found. Installing via apt-get..."
   if [ "$(id -u)" -ne 0 ]; then
     echo "Root privileges required for package installation. Elevating via sudo..."
-    sudo apt-get update && sudo apt-get install -y nodejs npm
+    if ! sudo apt-get update || ! sudo apt-get install -y nodejs npm; then
+      echo "Error: Failed to install Node.js and npm via apt-get." >&2
+      exit 1
+    fi
   else
-    apt-get update && apt-get install -y nodejs npm
+    if ! apt-get update || ! apt-get install -y nodejs npm; then
+      echo "Error: Failed to install Node.js and npm via apt-get." >&2
+      exit 1
+    fi
   fi
 else
   echo "Node.js and npm are already installed."
@@ -25,19 +31,31 @@ fi
 # 2. Update npm to the latest version
 echo "Updating npm to the latest version..."
 if [ "$(id -u)" -ne 0 ]; then
-  sudo npm install -g npm@latest
+  if ! sudo npm install -g npm@latest; then
+    echo "Error: Failed to update npm globally." >&2
+    exit 1
+  fi
 else
-  npm install -g npm@latest
+  if ! npm install -g npm@latest; then
+    echo "Error: Failed to update npm globally." >&2
+    exit 1
+  fi
 fi
 
 # 3. Install monorepo workspace dependencies if not already present
 if [ ! -d "$TARGET_DIR/node_modules" ]; then
   echo "Installing workspace dependencies in '$TARGET_DIR'..."
-  (cd "$TARGET_DIR" && npm install)
+  if ! (cd "$TARGET_DIR" && npm install); then
+    echo "Error: Failed to install workspace dependencies." >&2
+    exit 1
+  fi
 else
   echo "node_modules already exists in '$TARGET_DIR'."
   echo "Verifying and updating workspace links..."
-  (cd "$TARGET_DIR" && npm install)
+  if ! (cd "$TARGET_DIR" && npm install); then
+    echo "Error: Failed to update workspace dependencies." >&2
+    exit 1
+  fi
 fi
 
 echo "Dependency setup and verification complete."
