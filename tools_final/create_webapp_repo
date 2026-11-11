@@ -92,4 +92,23 @@ cat << 'EOF' > "$1/apps/api/package.json"
 }
 EOF
 
+cat << 'EOF' > "$1/apps/api/tsconfig.json"
+{
+  "extends": "../../tsconfig.json",
+  "_comment_extends": "Inherits base compiler options from the root monorepo configuration",
+  "compilerOptions": {
+    "target": "ESNext",
+    "_comment_target": "Sets the JavaScript target version for Cloudflare Workers edge runtime",
+    "module": "ESNext",
+    "_comment_module": "Specifies module loading for modern bundlers",
+    "moduleResolution": "bundler",
+    "_comment_moduleResolution": "Optimizes module resolution for bundlers",
+    "lib": ["ESNext"],
+    "_comment_lib": "Includes modern JavaScript runtime APIs for the edge",
+    "types": ["@cloudflare/workers-types"],
+    "_comment_types": "Provides global type definitions for Cloudflare Workers bindings and environment"
+  },
+  "include": ["src/**/*"]
+}
+EOF
 
