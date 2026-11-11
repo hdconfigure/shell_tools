@@ -63,4 +63,33 @@ cat << 'EOF' > "$1/package.json"
 }
 EOF
 
+mkdir -p "$1/apps/api"
+cat << 'EOF' > "$1/apps/api/package.json"
+{
+  "name": "@app/api",
+  "_comment_name": "API service package identifier using Hono and Cloudflare Workers",
+  "version": "0.0.1",
+  "private": true,
+  "_comment_private": "Prevents accidental publication to the public npm registry",
+  "main": "src/index.ts",
+  "_comment_main": "Entry point for the Cloudflare Worker API service",
+  "scripts": {
+    "dev": "wrangler dev",
+    "_comment_dev": "Starts local development server for Cloudflare Workers",
+    "deploy": "wrangler deploy",
+    "_comment_deploy": "Deploys the API worker globally to Cloudflare"
+  },
+  "dependencies": {
+    "@app/domain": "workspace:*",
+    "_comment_domain": "Local monorepo workspace dependency referencing pure domain logic",
+    "hono": "^4.0.0",
+    "_comment_hono": "Ultra-fast web framework for building APIs on edge runtimes"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0",
+    "_comment_wrangler": "Official CLI tool for configuring and deploying Cloudflare Workers"
+  }
+}
+EOF
+
 
