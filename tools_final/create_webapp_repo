@@ -49,4 +49,18 @@ cat << 'EOF' > "$1/tsconfig.json"
 }
 EOF
 
+cat << 'EOF' > "$1/package.json"
+{
+  "name": "@app/monorepo",
+  "_comment_name": "Root workspace identifier for the monorepo",
+  "private": true,
+  "_comment_private": "Ensures root package cannot be accidentally published to npm",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "_comment_workspaces": "Defines glob patterns for local workspace packages managed by npm"
+}
+EOF
+
 
