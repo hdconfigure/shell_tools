@@ -1,32 +1,38 @@
 #!/usr/bin/env sh
 #Copyright (C) 2026 by Theron Kauk and John Morris Beck <hdconfigure.direct@gmail.com> THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-mkdir -p "$1" "$1/apps/web" "$1/apps/api" "$1/packages/domain" "$1/packages/domain/src"
+# Enforce that a target directory argument was provided
+if [ -z "$1" ]; then
+  echo "Error: Target directory argument is required."
+  echo "Usage: $0 <target_directory>"
+  exit 1
+fi
 
-git init "$1"
+TARGET_DIR="$1"
 
-mkdir -p "$1/packages/domain"
+# Create all necessary monorepo directory structures dynamically
+mkdir -p "$TARGET_DIR" \
+         "$TARGET_DIR/apps/web/src" \
+         "$TARGET_DIR/apps/api/src" \
+         "$TARGET_DIR/packages/domain/src"
 
-cat << 'EOF' > "$1/packages/domain/package.json"
+# 1. Root package.json
+cat << 'EOF' > "$TARGET_DIR/package.json"
 {
-  "name": "@app/domain",
-  "_comment_name": "Monorepo package name (scoped import target for apps/api and apps/web)",
-  "version": "0.0.1",
+  "name": "@app/monorepo",
+  "_comment_name": "Root workspace identifier for the monorepo",
   "private": true,
-  "_comment_private": "Prevents accidental publication to the public npm registry",
-  "main": "dist/index.js",
-  "_comment_main": "Compiled JavaScript entry point produced by tsc",
-  "types": "dist/index.d.ts",
-  "_comment_types": "TypeScript declaration entry point for workspace auto-complete",
-  "scripts": {
-    "build": "tsc"
-  },
-  "devDependencies": {
-    "typescript": "^5.0.0"
-  }
+  "_comment_private": "Ensures root package cannot be accidentally published to npm",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "_comment_workspaces": "Defines glob patterns for local workspace packages managed by npm"
 }
 EOF
-cat << 'EOF' > "$1/tsconfig.json"
+
+# 2. Root tsconfig.json
+cat << 'EOF' > "$TARGET_DIR/tsconfig.json"
 {
   "compilerOptions": {
     "target": "ESNext",
@@ -49,22 +55,29 @@ cat << 'EOF' > "$1/tsconfig.json"
 }
 EOF
 
-cat << 'EOF' > "$1/package.json"
+# 3. Domain Package Configuration
+cat << 'EOF' > "$TARGET_DIR/packages/domain/package.json"
 {
-  "name": "@app/monorepo",
-  "_comment_name": "Root workspace identifier for the monorepo",
+  "name": "@app/domain",
+  "_comment_name": "Monorepo package name (scoped import target for apps/api and apps/web)",
+  "version": "0.0.1",
   "private": true,
-  "_comment_private": "Ensures root package cannot be accidentally published to npm",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
-  "_comment_workspaces": "Defines glob patterns for local workspace packages managed by npm"
+  "_comment_private": "Prevents accidental publication to the public npm registry",
+  "main": "dist/index.js",
+  "_comment_main": "Compiled JavaScript entry point produced by tsc",
+  "types": "dist/index.d.ts",
+  "_comment_types": "TypeScript declaration entry point for workspace auto-complete",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
 }
 EOF
 
-mkdir -p "$1/apps/api"
-cat << 'EOF' > "$1/apps/api/package.json"
+# 4. API Package Configuration
+cat << 'EOF' > "$TARGET_DIR/apps/api/package.json"
 {
   "name": "@app/api",
   "_comment_name": "API service package identifier using Hono and Cloudflare Workers",
@@ -92,7 +105,8 @@ cat << 'EOF' > "$1/apps/api/package.json"
 }
 EOF
 
-cat << 'EOF' > "$1/apps/api/tsconfig.json"
+# 5. API TypeScript Configuration
+cat << 'EOF' > "$TARGET_DIR/apps/api/tsconfig.json"
 {
   "extends": "../../tsconfig.json",
   "_comment_extends": "Inherits base compiler options from the root monorepo configuration",
@@ -112,3 +126,5 @@ cat << 'EOF' > "$1/apps/api/tsconfig.json"
 }
 EOF
 
+# Initialize git repository only after template generation is complete
+git init "$TARGET_DIR"
