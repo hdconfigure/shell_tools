@@ -1,301 +1,34 @@
 #!/usr/bin/env sh
 #Copyright (C) 2026 by Theron Kauk and John Morris Beck <hdconfigure.direct@gmail.com> THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-# Enforce that a target directory argument was provided
-if [ -z "$1" ]; then
-  echo "Error: Target directory argument is required."
-  echo "Usage: $0 <target_directory>"
+# Determine target directory (defaults to current directory if not specified)
+TARGET_DIR="${1:-.}"
+
+if [ ! -d "$TARGET_DIR" ]; then
+  echo "Error: Target directory '$TARGET_DIR' does not exist." >&2
   exit 1
 fi
 
-TARGET_DIR="$1"
+API_DIR="$TARGET_DIR/apps/api"
 
-# Check if the app has already been initialized in this directory
-if [ -f "$TARGET_DIR/.app_initialized" ]; then
-  echo "WARNING: This directory ($TARGET_DIR) has already been initialized by this script!"
-  echo "Aborting to prevent overwriting existing progress and file changes."
+if [ ! -d "$API_DIR" ]; then
+  echo "Error: API directory '$API_DIR' does not exist." >&2
   exit 1
 fi
 
-# Create all necessary monorepo directory structures dynamically
-mkdir -p "$TARGET_DIR" \
-         "$TARGET_DIR/apps/web/src" \
-         "$TARGET_DIR/apps/api/src" \
-         "$TARGET_DIR/packages/domain/src"
+# Ensure Node.js and npm are available
+if ! command -v npm >/dev/null 2>&1 || ! command -v node >/dev/null 2>&1; then
+  echo "Error: Node.js and npm are required but not found in the environment." >&2
+  exit 1
+fi
 
-# 1. Root package.json
-cat << 'EOF' > "$TARGET_DIR/package.json"
-{
-  "name": "@app/monorepo",
-  "_comment_name": "Root workspace identifier for the monorepo",
-  "private": true,
-  "_comment_private": "Ensures root package cannot be accidentally published to npm",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
-  "_comment_workspaces": "Defines glob patterns for local workspace packages managed by npm"
-}
-EOF
+echo "Initiating deployment for the API worker in '$API_DIR'..."
 
-# 2. Root tsconfig.json
-cat << 'EOF' > "$TARGET_DIR/tsconfig.json"
-{
-  "compilerOptions": {
-    "target": "ESNext",
-    "_comment_target": "Sets the JavaScript language version for emitted JavaScript",
-    "module": "ESNext",
-    "_comment_module": "Specifies the module loading system for the output code",
-    "moduleResolution": "bundler",
-    "_comment_moduleResolution": "Determines how module imports are resolved, optimized for modern bundlers",
-    "strict": true,
-    "_comment_strict": "Enables all strict type-checking options for robust code safety",
-    "skipLibCheck": true,
-    "_comment_skipLibCheck": "Skips type-checking of external declaration files (.d.ts) to speed up compilation",
-    "composite": true,
-    "_comment_composite": "Enables constraints required for project references in a monorepo workspace",
-    "declaration": true,
-    "_comment_declaration": "Generates corresponding '.d.ts' type declaration files for workspace sharing",
-    "declarationMap": true,
-    "_comment_declarationMap": "Generates source maps for declaration files to enable go-to-definition across packages"
-  }
-}
-EOF
+# Execute npm run deploy inside the API directory with error handling
+if ! (cd "$API_DIR" && npm run deploy); then
+  echo "Error: Failed to deploy the API worker to Cloudflare edge." >&2
+  echo "Hint: Ensure you have authenticated your account by running 'npx wrangler login'." >&2
+  exit 1
+fi
 
-# 3. Domain Package Configuration
-cat << 'EOF' > "$TARGET_DIR/packages/domain/package.json"
-{
-  "name": "@app/domain",
-  "_comment_name": "Monorepo package name (scoped import target for apps/api and apps/web)",
-  "version": "0.0.1",
-  "private": true,
-  "_comment_private": "Prevents accidental publication to the public npm registry",
-  "main": "dist/index.js",
-  "_comment_main": "Compiled JavaScript entry point produced by tsc",
-  "types": "dist/index.d.ts",
-  "_comment_types": "TypeScript declaration entry point for workspace auto-complete",
-  "scripts": {
-    "build": "tsc"
-  },
-  "devDependencies": {
-    "typescript": "^5.0.0"
-  }
-}
-EOF
-
-# 4. Domain TypeScript Configuration
-cat << 'EOF' > "$TARGET_DIR/packages/domain/tsconfig.json"
-{
-  "extends": "../../tsconfig.json",
-  "_comment_extends": "Inherits base compiler options from the root monorepo configuration",
-  "compilerOptions": {
-    "outDir": "./dist",
-    "_comment_outDir": "Directory where compiled JavaScript and declaration files are emitted",
-    "rootDir": "./src",
-    "_comment_rootDir": "Root directory of TypeScript source files for this package"
-  },
-  "include": ["src/**/*"]
-}
-EOF
-
-# 5. Domain Source Logic (Fresh Onion core domain layer)
-cat << 'EOF' > "$TARGET_DIR/packages/domain/src/index.ts"
-export interface HelloWorldEntity {
-  message: string;
-  timestamp: string;
-}
-
-export function getHelloWorldDomainData(name: string = "World"): HelloWorldEntity {
-  return {
-    message: `Hello, ${name}! Powered by Fresh Onion architecture.`,
-    timestamp: new Date().toISOString(),
-  };
-}
-EOF
-
-# 6. API Package Configuration
-cat << 'EOF' > "$TARGET_DIR/apps/api/package.json"
-{
-  "name": "@app/api",
-  "_comment_name": "API service package identifier using Hono and Cloudflare Workers",
-  "version": "0.0.1",
-  "private": true,
-  "_comment_private": "Prevents accidental publication to the public npm registry",
-  "main": "src/index.ts",
-  "_comment_main": "Entry point for the Cloudflare Worker API service",
-  "scripts": {
-    "dev": "wrangler dev",
-    "_comment_dev": "Starts local development server for Cloudflare Workers",
-    "deploy": "wrangler deploy",
-    "_comment_deploy": "Deploys the API worker globally to Cloudflare"
-  },
-  "dependencies": {
-    "@app/domain": "workspace:*",
-    "_comment_domain": "Local monorepo workspace dependency referencing pure domain logic",
-    "hono": "^4.0.0",
-    "_comment_hono": "Ultra-fast web framework for building APIs on edge runtimes"
-  },
-  "devDependencies": {
-    "wrangler": "^3.0.0",
-    "_comment_wrangler": "Official CLI tool for configuring and deploying Cloudflare Workers"
-  }
-}
-EOF
-
-# 7. API TypeScript Configuration
-cat << 'EOF' > "$TARGET_DIR/apps/api/tsconfig.json"
-{
-  "extends": "../../tsconfig.json",
-  "_comment_extends": "Inherits base compiler options from the root monorepo configuration",
-  "compilerOptions": {
-    "target": "ESNext",
-    "_comment_target": "Sets the JavaScript target version for Cloudflare Workers edge runtime",
-    "module": "ESNext",
-    "_comment_module": "Specifies module loading for modern bundlers",
-    "moduleResolution": "bundler",
-    "_comment_moduleResolution": "Optimizes module resolution for bundlers",
-    "lib": ["ESNext"],
-    "_comment_lib": "Includes modern JavaScript runtime APIs for the edge",
-    "types": ["@cloudflare/workers-types"],
-    "_comment_types": "Provides global type definitions for Cloudflare Workers bindings and environment"
-  },
-  "include": ["src/**/*"]
-}
-EOF
-
-# 8. API Entry Point (Hono Worker)
-cat << 'EOF' > "$TARGET_DIR/apps/api/src/index.ts"
-import { Hono } from 'hono';
-import { getHelloWorldDomainData } from '@app/domain';
-
-const app = new Hono();
-
-app.get('/', (c) => {
-  const name = c.req.query('name') || 'World';
-  const data = getHelloWorldDomainData(name);
-  return c.json(data);
-});
-
-export default app;
-EOF
-
-# 9. API Deployment Configuration (wrangler.toml)
-cat << 'EOF' > "$TARGET_DIR/apps/api/wrangler.toml"
-name = "app-api"
-main = "src/index.ts"
-compatibility_date = "2026-01-01"
-EOF
-
-# 10. Web Frontend Package Configuration (Vite)
-cat << 'EOF' > "$TARGET_DIR/apps/web/package.json"
-{
-  "name": "@app/web",
-  "_comment_name": "Frontend web application package identifier using Vite",
-  "version": "0.0.1",
-  "private": true,
-  "_comment_private": "Prevents accidental publication to the public npm registry",
-  "scripts": {
-    "dev": "vite",
-    "_comment_dev": "Starts local Vite development server for frontend client",
-    "build": "tsc && vite build",
-    "_comment_build": "Type-checks and builds production bundle for Cloudflare Pages"
-  },
-  "dependencies": {
-    "@app/domain": "workspace:*",
-    "_comment_domain": "Local monorepo workspace dependency referencing pure domain logic"
-  },
-  "devDependencies": {
-    "typescript": "^5.0.0",
-    "_comment_typescript": "TypeScript compiler for frontend code",
-    "vite": "^5.0.0",
-    "_comment_vite": "Next-generation frontend build tool and dev server"
-  }
-}
-EOF
-
-# 11. Web Frontend TypeScript Configuration
-cat << 'EOF' > "$TARGET_DIR/apps/web/tsconfig.json"
-{
-  "extends": "../../tsconfig.json",
-  "_comment_extends": "Inherits base compiler options from the root monorepo configuration",
-  "compilerOptions": {
-    "target": "ESNext",
-    "_comment_target": "Sets JavaScript target version for modern browsers",
-    "module": "ESNext",
-    "_comment_module": "Specifies module loading for Vite bundler",
-    "moduleResolution": "bundler",
-    "_comment_moduleResolution": "Optimizes module resolution for bundlers",
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "_comment_lib": "Includes browser and modern JavaScript runtime APIs",
-    "jsx": "react-jsx",
-    "_comment_jsx": "Enables modern JSX support if building with React or similar UI layers",
-    "skipLibCheck": true
-  },
-  "include": ["src/**/*"]
-}
-EOF
-
-# 12. Vite Configuration for Frontend
-cat << 'EOF' > "$TARGET_DIR/apps/web/vite.config.ts"
-import { defineConfig } from 'vite';
-
-export default defineConfig({
-  server: {
-    port: 3000,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8787',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
-      }
-    }
-  }
-});
-EOF
-
-# 13. Frontend HTML Entry Point
-cat << 'EOF' > "$TARGET_DIR/apps/web/index.html"
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Fresh Onion App</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
-</html>
-EOF
-
-# 14. Frontend Main TypeScript Entry Point
-cat << 'EOF' > "$TARGET_DIR/apps/web/src/main.ts"
-import { getHelloWorldDomainData } from '@app/domain';
-
-const appElement = document.getElementById('app');
-
-if (appElement) {
-  const data = getHelloWorldDomainData('Frontend User');
-  appElement.innerHTML = `
-    <div style="font-family: system-ui, sans-serif; padding: 2rem; max-width: 600px; margin: auto;">
-      <h1>${data.message}</h1>
-      <p><small>Timestamp: ${data.timestamp}</small></p>
-    </div>
-  `;
-}
-EOF
-
-# 15. Root .gitignore (including tracking marker file if desired, or leaving it tracked)
-cat << 'EOF' > "$TARGET_DIR/.gitignore"
-node_modules/
-dist/
-.wrangler/
-.DS_Store
-EOF
-
-# Create the hidden initialization marker file
-echo "Initialized on $(date)" > "$TARGET_DIR/.app_initialized"
-
-# Initialize git repository only after all template files are successfully written
-git init "$TARGET_DIR"
+echo "API worker deployment completed successfully."
