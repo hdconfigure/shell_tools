@@ -1,0 +1,43 @@
+#!/usr/bin/env sh
+#Copyright (C) 2026 by Theron Kauk and John Morris Beck <hdconfigure.direct@gmail.com> THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+# Determine target directory (defaults to current directory if not specified)
+TARGET_DIR="${1:-.}"
+
+if [ ! -d "$TARGET_DIR" ]; then
+  echo "Error: Target directory '$TARGET_DIR' does not exist."
+  exit 1
+fi
+
+# 1. Check if Node.js and npm are installed; install via Debian apt if missing
+if ! command -v npm >/dev/null 2>&1 || ! command -v node >/dev/null 2>&1; then
+  echo "Node.js and/or npm not found. Installing via apt-get..."
+  if [ "$(id -u)" -ne 0 ]; then
+    echo "Root privileges required for package installation. Elevating via sudo..."
+    sudo apt-get update && sudo apt-get install -y nodejs npm
+  else
+    apt-get update && apt-get install -y nodejs npm
+  fi
+else
+  echo "Node.js and npm are already installed."
+fi
+
+# 2. Update npm to the latest version
+echo "Updating npm to the latest version..."
+if [ "$(id -u)" -ne 0 ]; then
+  sudo npm install -g npm@latest
+else
+  npm install -g npm@latest
+fi
+
+# 3. Install monorepo workspace dependencies if not already present
+if [ ! -d "$TARGET_DIR/node_modules" ]; then
+  echo "Installing workspace dependencies in '$TARGET_DIR'..."
+  (cd "$TARGET_DIR" && npm install)
+else
+  echo "node_modules already exists in '$TARGET_DIR'."
+  echo "Verifying and updating workspace links..."
+  (cd "$TARGET_DIR" && npm install)
+fi
+
+echo "Dependency setup and verification complete."
