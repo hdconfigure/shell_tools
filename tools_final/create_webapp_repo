@@ -7,8 +7,6 @@ git init "$1"
 
 mkdir -p "$1/packages/domain"
 
-put_text_file(){
-
 cat << 'EOF' > "$1/packages/domain/package.json"
 {
   "name": "@app/domain",
