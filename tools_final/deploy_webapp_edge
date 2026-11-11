@@ -1,0 +1,34 @@
+#!/usr/bin/env sh
+#Copyright (C) 2026 by Theron Kauk and John Morris Beck <hdconfigure.direct@gmail.com> THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+# Determine target directory (defaults to current directory if not specified)
+TARGET_DIR="${1:-.}"
+
+if [ ! -d "$TARGET_DIR" ]; then
+  echo "Error: Target directory '$TARGET_DIR' does not exist." >&2
+  exit 1
+fi
+
+API_DIR="$TARGET_DIR/apps/api"
+
+if [ ! -d "$API_DIR" ]; then
+  echo "Error: API directory '$API_DIR' does not exist." >&2
+  exit 1
+fi
+
+# Ensure Node.js and npm are available
+if ! command -v npm >/dev/null 2>&1 || ! command -v node >/dev/null 2>&1; then
+  echo "Error: Node.js and npm are required but not found in the environment." >&2
+  exit 1
+fi
+
+echo "Initiating deployment for the API worker in '$API_DIR'..."
+
+# Execute npm run deploy inside the API directory with error handling
+if ! (cd "$API_DIR" && npm run deploy); then
+  echo "Error: Failed to deploy the API worker to Cloudflare edge." >&2
+  echo "Hint: Ensure you have authenticated your account by running 'npx wrangler login'." >&2
+  exit 1
+fi
+
+echo "API worker deployment completed successfully."
