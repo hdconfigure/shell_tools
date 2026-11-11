@@ -32,13 +32,21 @@ cat << 'EOF' > "$1/tsconfig.json"
 {
   "compilerOptions": {
     "target": "ESNext",
+    "_comment_target": "Sets the JavaScript language version for emitted JavaScript",
     "module": "ESNext",
+    "_comment_module": "Specifies the module loading system for the output code",
     "moduleResolution": "bundler",
+    "_comment_moduleResolution": "Determines how module imports are resolved, optimized for modern bundlers",
     "strict": true,
+    "_comment_strict": "Enables all strict type-checking options for robust code safety",
     "skipLibCheck": true,
+    "_comment_skipLibCheck": "Skips type-checking of external declaration files (.d.ts) to speed up compilation",
     "composite": true,
+    "_comment_composite": "Enables constraints required for project references in a monorepo workspace",
     "declaration": true,
-    "declarationMap": true
+    "_comment_declaration": "Generates corresponding '.d.ts' type declaration files for workspace sharing",
+    "declarationMap": true,
+    "_comment_declarationMap": "Generates source maps for declaration files to enable go-to-definition across packages"
   }
 }
 EOF
