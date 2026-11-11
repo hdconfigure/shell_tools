@@ -76,7 +76,37 @@ cat << 'EOF' > "$TARGET_DIR/packages/domain/package.json"
 }
 EOF
 
-# 4. API Package Configuration
+# 4. Domain TypeScript Configuration
+cat << 'EOF' > "$TARGET_DIR/packages/domain/tsconfig.json"
+{
+  "extends": "../../tsconfig.json",
+  "_comment_extends": "Inherits base compiler options from the root monorepo configuration",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "_comment_outDir": "Directory where compiled JavaScript and declaration files are emitted",
+    "rootDir": "./src",
+    "_comment_rootDir": "Root directory of TypeScript source files for this package"
+  },
+  "include": ["src/**/*"]
+}
+EOF
+
+# 5. Domain Source Logic (Fresh Onion core domain layer)
+cat << 'EOF' > "$TARGET_DIR/packages/domain/src/index.ts"
+export interface HelloWorldEntity {
+  message: string;
+  timestamp: string;
+}
+
+export function getHelloWorldDomainData(name: string = "World"): HelloWorldEntity {
+  return {
+    message: `Hello, ${name}! Powered by Fresh Onion architecture.`,
+    timestamp: new Date().toISOString(),
+  };
+}
+EOF
+
+# 6. API Package Configuration
 cat << 'EOF' > "$TARGET_DIR/apps/api/package.json"
 {
   "name": "@app/api",
@@ -105,7 +135,7 @@ cat << 'EOF' > "$TARGET_DIR/apps/api/package.json"
 }
 EOF
 
-# 5. API TypeScript Configuration
+# 7. API TypeScript Configuration
 cat << 'EOF' > "$TARGET_DIR/apps/api/tsconfig.json"
 {
   "extends": "../../tsconfig.json",
@@ -126,5 +156,48 @@ cat << 'EOF' > "$TARGET_DIR/apps/api/tsconfig.json"
 }
 EOF
 
-# Initialize git repository only after template generation is complete
+# 8. API Entry Point (Hono Worker)
+cat << 'EOF' > "$TARGET_DIR/apps/api/src/index.ts"
+import { Hono } from 'hono';
+import { getHelloWorldDomainData } from '@app/domain';
+
+const app = new Hono();
+
+app.get('/', (c) => {
+  const name = c.req.query('name') || 'World';
+  const data = getHelloWorldDomainData(name);
+  return c.json(data);
+});
+
+export default app;
+EOF
+
+# 9. Web Frontend Package Configuration (Vite)
+cat << 'EOF' > "$TARGET_DIR/apps/web/package.json"
+{
+  "name": "@app/web",
+  "_comment_name": "Frontend web application package identifier using Vite",
+  "version": "0.0.1",
+  "private": true,
+  "_comment_private": "Prevents accidental publication to the public npm registry",
+  "scripts": {
+    "dev": "vite",
+    "_comment_dev": "Starts local Vite development server for frontend client",
+    "build": "tsc && vite build",
+    "_comment_build": "Type-checks and builds production bundle for Cloudflare Pages"
+  },
+  "dependencies": {
+    "@app/domain": "workspace:*",
+    "_comment_domain": "Local monorepo workspace dependency referencing pure domain logic"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "_comment_typescript": "TypeScript compiler for frontend code",
+    "vite": "^5.0.0",
+    "_comment_vite": "Next-generation frontend build tool and dev server"
+  }
+}
+EOF
+
+# Initialize git repository only after all template files are successfully written
 git init "$TARGET_DIR"
