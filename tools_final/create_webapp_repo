@@ -6,6 +6,9 @@ mkdir -p "$1" "$1/apps/web" "$1/apps/api" "$1/packages/domain"
 git init "$1"
 
 mkdir -p "$1/packages/domain"
+
+put_text_file(){
+
 cat << 'EOF' > "$1/packages/domain/package.json"
 {
   "name": "@app/domain",
@@ -22,6 +25,20 @@ cat << 'EOF' > "$1/packages/domain/package.json"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
+  }
+}
+EOF
+cat << 'EOF' > "$1/tsconfig.json"
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true
   }
 }
 EOF
