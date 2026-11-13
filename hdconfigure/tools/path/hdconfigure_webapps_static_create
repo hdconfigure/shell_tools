@@ -8,4 +8,4 @@ github_repo_name="$2"
 
 mkdir -p "$webapp_directory/$webapp_directory" || shell_error "error: hdconfigure_webapps_static_create failed to create directoryy $webapps_directory"
 mkdir "$webapp_directory/$github_username" || shell_error "error: hdconfigure_webapps_static_create failed to create directory $webapps_directory/$github_repo_name. Webapp already exists at that directory."
-mkdir -p "$webapp_directory/$github_repo_name/hdconfigure" "$webapp_directory/$github_repo_name/hdconfigure/tools" "$webapp_directory/$github_repo_name/hdconfigure/tools/path"
+mkdir -p "$webapp_directory/$github_repo_name/hdconfigure/tools/path" || shell_error "error" hdconfigure_webapps_static_create failed to create directory "$webapp_directory/$github_repo_name/hdconfigure/tools/path"
