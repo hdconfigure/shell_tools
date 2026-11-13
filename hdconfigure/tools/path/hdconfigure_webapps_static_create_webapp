@@ -33,4 +33,4 @@ Copyright (C) 2026 by Theron Kauk and John Morris Beck <hdconfigure.direct@gmail
 </html>' > "$webapp_directory/index.html" || error "error: $tool_name failed to create root index.html file for webapp."
 
 git -C  "$webapp_directory" init || error "error: $tool_name failed to git init new webapp."
-git -C "$webapp_directory" branch -M main || "error: $tool_name failed to set new webapp to main branch."
+git -C "$webapp_directory" branch -M main || error "error: $tool_name failed to set new webapp to main branch."
