@@ -2,9 +2,10 @@
 #~/.config/hdconfigure/tools/git/shell_tools/hdconfigure/tools/path_hdconfigure_webapps_static_create
 #Copyright (C) 2026 by Theron Kauk and John Morris Beck <hdconfigure.direct@gmail.com> THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-webapp_directory="$HOME/.config/hdconfigure/webapps/static/"
 github_username="$1"
+webapp_directory="$HOME/.config/hdconfigure/webapps/static/$github_username"
 github_repo_name="$2"
 
-mkdir -p "$webapp_directory/$github_repo_name" || shell_error "error: hdconfigure_webapps_static_create failed to create directoryy $webapps_directory/$github_repo_name"
-mkdir "$webapp_directory/$github_repo_name/$github_username" || shell_error "error: hdconfigure_webapps_static_create failed to create directory $webapps_directory/$github_repo_name"
+mkdir -p "$webapp_directory/$webapp_directory" || shell_error "error: hdconfigure_webapps_static_create failed to create directoryy $webapps_directory"
+mkdir "$webapp_directory/$github_username" || shell_error "error: hdconfigure_webapps_static_create failed to create directory $webapps_directory/$github_repo_name. Webapp already exists at that directory."
+mkdir -p "$webapp_directory/$github_repo_name/hdconfigure/" "$webapp_directory/$github_user_name/$github_reponame/" "$webapp_directory/$github_repo_name/hdconfigure/"
