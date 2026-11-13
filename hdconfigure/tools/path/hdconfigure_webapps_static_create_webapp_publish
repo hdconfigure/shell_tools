@@ -1,8 +1,8 @@
 #!/usr/bin/env sh
-#~/.config/hdconfigure/tools/git/shell_tools/hdconfigure/tools/hdconfigure_webapps_static_publish_webapp
+#~/.config/hdconfigure/tools/git/shell_tools/hdconfigure/tools/hdconfigure_webapps_static_create_webapp_publish
 #Copyright (C) 2026 by Theron Kauk and John Morris Beck <hdconfigure.direct@gmail.com> THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-tool_name="hdconfigure_webapps_static_publish_webapp"
+tool_name="hdconfigure_webapps_static_create_webapp_publish"
 
 github_username="$1"
 github_repo_name="$2"
@@ -19,7 +19,24 @@ if ! command -v gh >/dev/null 2>&1; then
     exit 1
 fi
 
+# Stage all current files (including new assets, subfolders, and code)
+git -C "$webapp_directory" add . || {
+    error "error: $tool_name failed to stage files in $webapp_directory."
+    exit 1
+}
+
+# Commit changes if there are any uncommitted modifications
+if ! git -C "$webapp_directory" diff-index --quiet HEAD -- 2>/dev/null; then
+    git -C "$webapp_directory" commit -m "Publish webapp update" || {
+        error "error: $tool_name failed to commit changes before publishing."
+        exit 1
+    }
+fi
+
+# Create the remote repo and push the committed history
 gh repo create "$github_username/$github_repo_name" --public --source="$webapp_directory" --push || {
     error "error: $tool_name failed to create GitHub repository and push source files."
     exit 1
 }
+
+print "Success: $tool_name published $github_username/$github_repo_name to GitHub."
