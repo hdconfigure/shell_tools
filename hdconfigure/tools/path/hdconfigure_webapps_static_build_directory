@@ -23,6 +23,6 @@ fi
 # Find all directories and subdirectories and run the build page command on each
 find "$webapp_directory" -type d -exec sh -c '
     for dir do
-        hdconfigure_static_apps_build_page "$dir"
+        hdconfigure_webapps_static_build_page "$dir"
     done
 ' sh {} +
