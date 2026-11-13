@@ -10,7 +10,7 @@ webapp_directory="$webapp_parent_directory/$github_repo_name"
 
 mkdir -p "$webapp_parent_directory" || error "error: $tool_name failed to create directory $webapps_directory."
 mkdir "$webapp_directory" || error "error: $tool_name failed to create directory $webapp_directory. Webapp already exists at that directory."
-mkdir -p "$webapp_directory/assets" "$webapp_directory/home" || error "error: $tool_name failed to create directory $webapps_directory/$github_repo_name. Webapp already exists at that directory."
+mkdir -p "$webapp_directory/assets" "$webapp_directory/home" || error "error: $tool_name failed to create directory $webapp_directory. Webapp already exists at that directory."
 
 print 'Copyright (C) 2026 by Theron Kauk and John Morris Beck <hdconfigure.direct@gmail.com> THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.' > "$webapp_directory/license.txt" || error "error: hdconfigure_webapps_static_create failed to create license file."
 
