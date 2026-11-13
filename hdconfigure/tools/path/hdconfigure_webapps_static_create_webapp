@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 #~/.config/hdconfigure/tools/git/shell_tools/hdconfigure/tools/path_hdconfigure_webapps_static_create_webapp
 #Copyright (C) 2026 by Theron Kauk and John Morris Beck <hdconfigure.direct@gmail.com> THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-tool_name="hdconfigur_webapps_static_create_webapp
+tool_name="hdconfigure_webapps_static_create_webapp"
 
 github_username="$1"
 webapp_parent_directory="$HOME/.config/hdconfigure/webapps/static/$github_username"
@@ -32,5 +32,5 @@ Copyright (C) 2026 by Theron Kauk and John Morris Beck <hdconfigure.direct@gmail
 </body>
 </html>' > "$webapp_directory/index.html" || error "error: $tool_name failed to create root index.html file for webapp."
 
-git -C  init "$webapp_directory" || error "error: $tool_name failed to git init new webapp."
+git -C  "$webapp_directory" init || error "error: $tool_name failed to git init new webapp."
 git -C "$webapp_directory" branch -M main || "error: $tool_name failed to set new webapp to main branch."
