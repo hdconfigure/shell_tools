@@ -8,11 +8,15 @@ webapp_parent_directory="$HOME/.config/hdconfigure/webapps/static/$github_userna
 github_repo_name="$2"
 webapp_directory="$webapp_parent_directory/$github_repo_name"
 
-mkdir -p "$webapp_parent_directory" || error "error: $tool_name failed to create directory $webapp_parent_directory."
-mkdir "$webapp_directory" || error "error: $tool_name failed to create directory $webapp_directory. Webapp already exists at that directory."
-mkdir -p "$webapp_directory/assets" "$webapp_directory/home" || error "error: $tool_name failed to create directory $webapp_directory. Webapp already exists at that directory."
+if [ -d "$webapp_directory" ]; then
+    error "error: $tool_name failed to create directory $webapp_directory. Webapp already exists at that directory."
+    exit 1
+fi
 
-print 'Copyright (C) 2026 by Theron Kauk and John Morris Beck <hdconfigure.direct@gmail.com> THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.' > "$webapp_directory/license.txt" || error "error: hdconfigure_webapps_static_create failed to create license file."
+mkdir -p "$webapp_parent_directory" || { error "error: $tool_name failed to create directory $webapp_parent_directory."; exit 1; }
+mkdir -p "$webapp_directory/assets" "$webapp_directory/home" || { error "error: $tool_name failed to create subdirectories in $webapp_directory."; exit 1; }
+
+print 'Copyright (C) 2026 by Theron Kauk and John Morris Beck <hdconfigure.direct@gmail.com> THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.' > "$webapp_directory/license.txt" || { error "error: hdconfigure_webapps_static_create failed to create license file."; exit 1; }
 
 print '<!-- Copyright (C) 2026 by Theron Kauk and John Morris Beck <hdconfigure.direct@gmail.com> THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. -->
 <!DOCTYPE html>
@@ -30,9 +34,9 @@ print '<!-- Copyright (C) 2026 by Theron Kauk and John Morris Beck <hdconfigure.
 Copyright (C) 2026 by Theron Kauk and John Morris Beck <hdconfigure.direct@gmail.com> THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 </body>
-</html>' > "$webapp_directory/index.html" || error "error: $tool_name failed to create root index.html file for webapp."
+</html>' > "$webapp_directory/index.html" || { error "error: $tool_name failed to create root index.html file for webapp."; exit 1; }
 
-git -C "$webapp_directory" init || error "error: $tool_name failed to git init new webapp."
-git -C "$webapp_directory" branch -M main || error "error: $tool_name failed to set new webapp to main branch."
-git -C "$webapp_directory" add . || error "error: $tool_name failed to stage files in $webapp_directory."
-git -C "$webapp_directory" commit -m "Initial commit" || error "error: $tool_name failed to perform initial commit."
+git -C "$webapp_directory" init || { error "error: $tool_name failed to git init new webapp."; exit 1; }
+git -C "$webapp_directory" branch -M main || { error "error: $tool_name failed to set new webapp to main branch."; exit 1; }
+git -C "$webapp_directory" add . || { error "error: $tool_name failed to stage files in $webapp_directory."; exit 1; }
+git -C "$webapp_directory" commit -m "Initial commit" || { error "error: $tool_name failed to perform initial commit."; exit 1; }
