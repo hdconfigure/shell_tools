@@ -1,0 +1,27 @@
+#!/usr/bin/env sh
+#~/.config/hdconfigure/tools/git/shell_tools/hdconfigure/tools/hdconfigure_webapps_static_publish_webapp
+#Copyright (C) 2026 by Theron Kauk and John Morris Beck <hdconfigure.direct@gmail.com> THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+tool_name="hdconfigure_webapps_static_publish_webapp"
+
+github_username="$1"
+github_repo_name="$2"
+webapp_parent_directory="$HOME/.config/hdconfigure/webapps/static/$github_username"
+webapp_directory="$webapp_parent_directory/$github_repo_name"
+
+if [ ! -d "$webapp_directory" ]; then
+    error "error: $tool_name failed. Webapp directory does not exist at $webapp_directory."
+    exit 1
+fi
+
+if ! command -v gh >/dev/null 2>&1; then
+    error "error: $tool_name failed. GitHub CLI (gh) is not installed or not in PATH."
+    exit 1
+fi
+
+gh repo create "$github_username/$github_repo_name" --public --source="$webapp_directory" --push || {
+    error "error: $tool_name failed to create GitHub repository and push source files."
+    exit 1
+}
+
+print "Success: $tool_name published $github_username/$github_repo_name to GitHub."
