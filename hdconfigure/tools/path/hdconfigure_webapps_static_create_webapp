@@ -8,7 +8,7 @@ webapp_parent_directory="$HOME/.config/hdconfigure/webapps/static/$github_userna
 github_repo_name="$2"
 webapp_directory="$webapp_parent_directory/$github_repo_name"
 
-mkdir -p "$webapp_parent_directory" || error "error: $tool_name failed to create directory $webapps_directory."
+mkdir -p "$webapp_parent_directory" || error "error: $tool_name failed to create directory $webapp_directory."
 mkdir "$webapp_directory" || error "error: $tool_name failed to create directory $webapp_directory. Webapp already exists at that directory."
 mkdir -p "$webapp_directory/assets" "$webapp_directory/home" || error "error: $tool_name failed to create directory $webapp_directory. Webapp already exists at that directory."
 
