@@ -23,5 +23,3 @@ gh repo create "$github_username/$github_repo_name" --public --source="$webapp_d
     error "error: $tool_name failed to create GitHub repository and push source files."
     exit 1
 }
-
-print "Success: $tool_name published $github_username/$github_repo_name to GitHub."
