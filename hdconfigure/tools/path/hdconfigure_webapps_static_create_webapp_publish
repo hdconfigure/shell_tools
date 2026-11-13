@@ -19,7 +19,7 @@ if ! command -v gh >/dev/null 2>&1; then
     exit 1
 fi
 
-# Stage all current files (including new assets, subfolders, and code)
+# Stage all current files (respecting .gitignore)
 git -C "$webapp_directory" add . || {
     error "error: $tool_name failed to stage files in $webapp_directory."
     exit 1
@@ -33,10 +33,23 @@ if ! git -C "$webapp_directory" diff-index --quiet HEAD -- 2>/dev/null; then
     }
 fi
 
-# Create the remote repo and push the committed history
-gh repo create "$github_username/$github_repo_name" --public --source="$webapp_directory" --push || {
-    error "error: $tool_name failed to create GitHub repository and push source files."
-    exit 1
-}
+# Check if the GitHub repository already exists; create it if new, or push updates if it exists
+if ! gh repo view "$github_username/$github_repo_name" >/dev/null 2>&1; then
+    gh repo create "$github_username/$github_repo_name" --public --source="$webapp_directory" --push || {
+        error "error: $tool_name failed to create GitHub repository and push source files."
+        exit 1
+    }
+else
+    if ! git -C "$webapp_directory" remote get-url origin >/dev/null 2>&1; then
+        git -C "$webapp_directory" remote add origin "https://github.com/$github_username/$github_repo_name.git" || {
+            error "error: $tool_name failed to add git remote origin."
+            exit 1
+        }
+    fi
+    git -C "$webapp_directory" push -u origin main || {
+        error "error: $tool_name failed to push updates to GitHub."
+        exit 1
+    }
+fi
 
 print "Success: $tool_name published $github_username/$github_repo_name to GitHub."
